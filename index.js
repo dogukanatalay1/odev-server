@@ -4,7 +4,7 @@ const multer = require('multer');
 
 const upload = multer({ dest: 'uploads/' });
 
-const { hashAndSave } = require("./scripts/script");
+const { hashAndSave, decryptWithAES } = require("./scripts/script");
 
 const app = express();
 app.use(express.json());
@@ -32,15 +32,28 @@ app.post("/api/file", upload.single('file'), (req, res) => {
     console.log('req.body.secretKey: ', req.body.secretKey);
     console.log('req.file: ', req.file);
 
-    hashAndSave({ 
-        file: req.file, 
+    let encrypted = hashAndSave({ 
+        filePath: req.file.path, 
         algo: req.body.algo,
-        secretKey: req.body.secretKey
+        // secretKey: req.body.secretKey
+        secretKey: "aabbccddeeff00112233445566778899aabbccddeeff00112233445566778899"
     });
+
+    console.log('encrypted: ', encrypted);
     
     res.status(200).json({
-        data: {}
+        encrypted
     });
+});
+
+app.get("/api/files", (req, res) => {
+
+    let decryptedFile = decryptWithAES(
+        'uploads\\20f2356d027b59e22f551f6f3f0f1eec', 
+        "aabbccddeeff00112233445566778899aabbccddeeff00112233445566778899"
+    );
+
+    res.json({ decryptedFile });
 });
 
 app.listen(PORT, () => {
