@@ -1,12 +1,6 @@
 const crypto = require('crypto');
 const fs = require('fs');
 
-const hashAlgos = [
-    "DES",
-    "AES",
-    "Blowfish"
-];
-
 function encryptWithDES(fileContent, secretKey) {
     try {
         // const keyBuffer = Buffer.from(secretKey, 'utf8');
@@ -24,7 +18,7 @@ function encryptWithDES(fileContent, secretKey) {
         console.error("Encryption failed:", error.message);
         return null; 
     }
-}
+};
 
 function encryptWithAES(filePath, secretKey) {
     try {
@@ -44,11 +38,33 @@ function encryptWithAES(filePath, secretKey) {
         console.error("Encryption failed:", error.message);
         return null; 
     }
-}
+};
 
+function encryptWithBlowfish(filePath, secretKey) {
+    try {
+        const fileContent = fs.readFileSync(filePath);
+
+        const keyBuffer = Buffer.from(secretKey, 'hex');
+        if (keyBuffer.length < 4 || keyBuffer.length > 56) {
+            throw new Error("Invalid key length for Blowfish encryption. Key must be between 4 and 56 bytes long.");
+        }
+
+        const cipher = crypto.createCipheriv('bf-ecb', keyBuffer, null); // Using ECB mode for Blowfish
+        let encrypted = cipher.update(fileContent);
+        encrypted = Buffer.concat([encrypted, cipher.final()]);
+        return encrypted;
+    } catch (error) {
+        console.error("Encryption failed:", error.message);
+        return null;
+    }
+};
+
+// decrypts
 function decryptWithAES(encryptedFilePath, secretKeyHex) {
     try {
         const encryptedContent = fs.readFileSync(encryptedFilePath);
+
+        console.log('file', encryptedContent);
 
         const keyBuffer = Buffer.from(secretKeyHex, 'hex');
         if (keyBuffer.length !== 32) {
@@ -57,27 +73,29 @@ function decryptWithAES(encryptedFilePath, secretKeyHex) {
 
         const decipher = crypto.createDecipheriv('aes-256-ecb', keyBuffer, null);
         let decrypted = decipher.update(encryptedContent);
-        decrypted = Buffer.concat([decrypted, decipher.final()]);
+
+        console.log('decrypted: ', decrypted);
+        // decrypted = Buffer.concat([decrypted, decipher.final()]);
         return decrypted;
     } catch (error) {
         console.error("Decryption failed:", error.message);
         return null; 
     }
-}
+};
 
+const hashAlgos = {
+    "DES": encryptWithDES,
+    "AES": encryptWithAES,
+    "Blowfish": encryptWithBlowfish
+};
 
 const hashAndSave = ({ filePath, algo, secretKey }) => {
-    if(!hashAlgos.includes(algo)) return;
+    let algos = Object.keys(hashAlgos);
+    if(!algos.includes(algo)) return null;
 
-    if(algo === "DES") {
-        let encrypted = encryptWithDES(file, secretKey);
-        console.log('encrypted: ', encrypted);
-    }
+    let encrypted = hashAlgos[algo](filePath, secretKey);
 
-    if(algo === "AES") {
-        let encrypted = encryptWithAES(filePath, secretKey);
-        console.log('encrypted: ', encrypted);
-    }
+    return encrypted;
 };
 
 module.exports = { hashAndSave, decryptWithAES };

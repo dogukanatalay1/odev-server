@@ -35,8 +35,7 @@ app.post("/api/file", upload.single('file'), (req, res) => {
     let encrypted = hashAndSave({ 
         filePath: req.file.path, 
         algo: req.body.algo,
-        // secretKey: req.body.secretKey
-        secretKey: "aabbccddeeff00112233445566778899aabbccddeeff00112233445566778899"
+        secretKey: req.body.secretKey
     });
 
     console.log('encrypted: ', encrypted);
@@ -46,10 +45,10 @@ app.post("/api/file", upload.single('file'), (req, res) => {
     });
 });
 
-app.get("/api/files", (req, res) => {
+app.get("/api/file/aes", (req, res) => {
 
     let decryptedFile = decryptWithAES(
-        'uploads\\20f2356d027b59e22f551f6f3f0f1eec', 
+        'uploads\\84c38a41c16c10de3c7b909d7e9aa4d0', 
         "aabbccddeeff00112233445566778899aabbccddeeff00112233445566778899"
     );
 
