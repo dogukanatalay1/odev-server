@@ -1,6 +1,8 @@
 const express = require('express');
 const cors = require('cors');
 const multer = require('multer');
+const fs = require('fs');
+const path = require('path');
 
 const upload = multer({ dest: 'uploads/' });
 
@@ -45,14 +47,48 @@ app.post("/api/file", upload.single('file'), (req, res) => {
     });
 });
 
-app.get("/api/file/aes", (req, res) => {
+app.get("/api/file/aes/:selectedFileName", (req, res) => {
+    let selectedFileName = req.params.selectedFileName;
 
     let decryptedFile = decryptWithAES(
-        'uploads\\84c38a41c16c10de3c7b909d7e9aa4d0', 
+        `uploads\\${selectedFileName}`, 
         "aabbccddeeff00112233445566778899aabbccddeeff00112233445566778899"
     );
 
     res.json({ decryptedFile });
+});
+
+app.delete("/api/files/delete/:selectedFileName", (req, res) => {
+    let selectedFileName = req.params.selectedFileName;
+    let filePath = path.join(__dirname, 'uploads', selectedFileName); 
+
+    if (fs.existsSync(filePath)) {
+        fs.unlink(filePath, (err) => {
+            if (err) {
+                console.error(err);
+                return res.status(500).send('Error deleting file');
+            }
+            res.send({ message: 'File deleted successfully' });
+        });
+    } else {
+        res.status(404).send('File not found');
+    }
+});
+
+app.get("/api/files/all", (req, res) => {
+    const directoryPath = path.join(__dirname, 'uploads'); 
+
+    fs.readdir(directoryPath, function(err, files) {
+        if (err) {
+            console.log('Error finding files: ' + err);
+            res.status(500).send('Unable to scan directory: ' + err);
+        } else {
+            let fileNames = files.map(file => {
+                return file;
+            });
+            res.json(fileNames); 
+        }
+    });
 });
 
 app.listen(PORT, () => {

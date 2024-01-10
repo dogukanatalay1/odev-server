@@ -49,7 +49,7 @@ function encryptWithBlowfish(filePath, secretKey) {
             throw new Error("Invalid key length for Blowfish encryption. Key must be between 4 and 56 bytes long.");
         }
 
-        const cipher = crypto.createCipheriv('bf-ecb', keyBuffer, null); // Using ECB mode for Blowfish
+        const cipher = crypto.createCipheriv('bf-ecb', keyBuffer, null); 
         let encrypted = cipher.update(fileContent);
         encrypted = Buffer.concat([encrypted, cipher.final()]);
         return encrypted;
